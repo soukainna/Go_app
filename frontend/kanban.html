@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Kanban</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; padding: 20px; background: #f0f2f5; }
+    h1 { text-align: center; }
+    form { display: flex; justify-content: center; gap: 10px; margin: 20px auto; max-width: 600px; }
+    input, button { padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    button { background-color: #3498db; color: white; cursor: pointer; }
+    .columns { display: flex; gap: 20px; justify-content: center; margin-top: 30px; }
+    .column { background: #ecf0f1; padding: 10px; border-radius: 10px; flex: 1; min-height: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .status-title { text-align: center; font-weight: bold; margin-bottom: 10px; }
+    .task { background: white; margin: 10px 0; padding: 10px; border-left: 5px solid #999; border-radius: 5px; }
+    .task.en-attente { border-color: #f39c12; }
+    .task.en-cours { border-color: #3498db; }
+    .task.termine { border-color: #2ecc71; }
+    .status-buttons button { margin-right: 5px; padding: 5px 8px; border-radius: 4px; border: none; color: white; cursor: pointer; }
+    .btn-attente { background: #f39c12; }
+    .btn-cours { background: #3498db; }
+    .btn-termine { background: #2ecc71; }
+  </style>
+</head>
+<body>
+  <h1>Kanban - Mes Tâches</h1>
+
+  <form id="taskForm">
+    <input type="text" id="title" placeholder="Titre" required />
+    <input type="text" id="description" placeholder="Description" required />
+    <button type="submit">Ajouter</button>
+  </form>
+
+  <div class="columns">
+    <div class="column" id="en_attente"><div class="status-title">En attente</div></div>
+    <div class="column" id="en_cours"><div class="status-title">En cours</div></div>
+    <div class="column" id="termine"><div class="status-title">Terminé</div></div>
+  </div>
+
+  <script>
+    const API = "http://localhost:5000/tasks";
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      window.location.href = "index.html";
+    }
+
+    document.getElementById("taskForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const title = document.getElementById("title").value;
+      const description = document.getElementById("description").value;
+
+      await fetch(API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, description })
+      });
+
+      document.getElementById("title").value = "";
+      document.getElementById("description").value = "";
+      fetchTasks();
+    };
+
+    async function fetchTasks() {
+      const res = await fetch(API, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      const data = await res.json();
+      const enAttente = document.getElementById("en_attente");
+      const enCours = document.getElementById("en_cours");
+      const termine = document.getElementById("termine");
+
+      enAttente.innerHTML = '<div class="status-title">En attente</div>';
+      enCours.innerHTML = '<div class="status-title">En cours</div>';
+      termine.innerHTML = '<div class="status-title">Terminé</div>';
+
+      data.forEach(task => {
+        const div = document.createElement("div");
+        const statusClass = task.status === "en attente" ? "en-attente" :
+                            task.status === "en cours" ? "en-cours" : "termine";
+        div.className = `task ${statusClass}`;
+        div.innerHTML = `
+          <h4>${task.title}</h4>
+          <p>${task.description}</p>
+          <div class="status-buttons">
+            <button class="btn-attente" onclick="changeStatus(${task.id}, 'en attente')">En attente</button>
+            <button class="btn-cours" onclick="changeStatus(${task.id}, 'en cours')">En cours</button>
+            <button class="btn-termine" onclick="changeStatus(${task.id}, 'terminé')">Terminé</button>
+          </div>`;
+        if (task.status === "en attente") enAttente.appendChild(div);
+        else if (task.status === "en cours") enCours.appendChild(div);
+        else termine.appendChild(div);
+      });
+    }
+
+    async function changeStatus(id, newStatus) {
+      await fetch(`${API}/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      fetchTasks();
+    }
+
+    fetchTasks();
+  </script>
+</body>
+</html>

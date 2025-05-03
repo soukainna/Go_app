@@ -1,114 +1,74 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Kanban - Gestion des Tâches</title>
+  <title>Connexion - Kanban</title>
   <style>
-    body { font-family: "Segoe UI", sans-serif; margin: 0; padding: 20px; background-color: #f5f7fa; }
-    h1 { text-align: center; margin-bottom: 30px; }
-    #taskForm { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
-    #taskForm input[type="text"] { padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 200px; }
-    #taskForm button { padding: 10px 15px; border-radius: 5px; border: none; background-color: #3498db; color: white; cursor: pointer; }
-    .columns { display: flex; gap: 20px; justify-content: center; align-items: flex-start; }
-    .column { flex: 1; background-color: #ecf0f1; padding: 15px; border-radius: 10px; min-height: 300px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    .status-title { text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 15px; }
-    .task { background-color: white; border-left: 6px solid #ccc; border-radius: 8px; margin-bottom: 15px; padding: 12px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); }
-    .task h4 { margin: 0 0 5px 0; } .task p { margin: 0 0 10px 0; color: #555; }
-    .task.en-attente { border-color: #f39c12; } .task.en-cours { border-color: #3498db; } .task.termine { border-color: #2ecc71; }
-    .status-buttons button { margin-right: 5px; margin-top: 5px; padding: 6px 10px; border-radius: 4px; border: none; cursor: pointer; color: white; }
-    .btn-attente { background-color: #f39c12; } .btn-cours { background-color: #3498db; } .btn-termine { background-color: #2ecc71; }
+    body { font-family: Arial, sans-serif; padding: 30px; background-color: #f0f2f5; text-align: center; }
+    form { margin: 20px auto; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
+    input, button { padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    button { background-color: #3498db; color: white; cursor: pointer; }
+    h1 { margin-bottom: 10px; }
+    p { margin: 0; color: green; }
   </style>
 </head>
 <body>
-<h1>Kanban - Gestion des Tâches</h1>
-<form id="taskForm">
-  <input type="text" id="title" placeholder="Titre" required>
-  <input type="text" id="description" placeholder="Description" required>
-  <button type="submit">Ajouter</button>
-</form>
-<div class="columns">
-  <div class="column" id="en_attente"><div class="status-title">En attente</div></div>
-  <div class="column" id="en_cours"><div class="status-title">En cours</div></div>
-  <div class="column" id="termine"><div class="status-title">Terminé</div></div>
-</div>
-<script>
-  async function fetchTasks() {
-    const res = await fetch('http://localhost:5000/tasks');
-    const data = await res.json();
+  <h1>Connexion</h1>
 
-    const enAttente = document.getElementById('en_attente');
-    const enCours = document.getElementById('en_cours');
-    const termine = document.getElementById('termine');
+  <h2>Inscription</h2>
+  <form id="registerForm">
+    <input type="email" id="regEmail" placeholder="Email" required />
+    <input type="password" id="regPassword" placeholder="Mot de passe" required />
+    <button type="submit">S'inscrire</button>
+  </form>
+  <p id="registerStatus"></p>
 
-    enAttente.innerHTML = '<div class="status-title">En attente</div>';
-    enCours.innerHTML = '<div class="status-title">En cours</div>';
-    termine.innerHTML = '<div class="status-title">Terminé</div>';
+  <h2>Connexion</h2>
+  <form id="loginForm">
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Mot de passe" required />
+    <button type="submit">Se connecter</button>
+  </form>
+  <p id="loginStatus"></p>
 
-    data.forEach(task => {
-      const el = document.createElement('div');
-      const classe = task.status === 'en attente' ? 'en-attente'
-                    : task.status === 'en cours' ? 'en-cours'
-                    : 'termine';
-      el.className = 'task ' + classe;
-      el.innerHTML = `
-        <h4>${task.title}</h4>
-        <p>${task.description}</p>
-        <div class="status-buttons">
-          <button class="btn-attente" onclick="changeStatus(${task.id}, 'en attente')">En attente</button>
-          <button class="btn-cours" onclick="changeStatus(${task.id}, 'en cours')">En cours</button>
-          <button class="btn-termine" onclick="changeStatus(${task.id}, 'terminé')">Terminé</button>
-        </div>
-      `;
+  <script>
+    document.getElementById("registerForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("regEmail").value;
+      const password = document.getElementById("regPassword").value;
 
-      if (task.status === 'en attente') {
-        enAttente.appendChild(el);
-      } else if (task.status === 'en cours') {
-        enCours.appendChild(el);
-      } else {
-        termine.appendChild(el);
-      }
-    });
-  }
+      const res = await fetch("http://localhost:5001/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
 
-  async function changeStatus(id, newStatus) {
-    console.log("Changement demandé :", id, newStatus); // 👉 vérifie dans ta console navigateur
+      document.getElementById("registerStatus").innerText = res.ok
+        ? "Compte créé ✅"
+        : "Erreur lors de l'inscription ❌";
+    };
 
-    try {
-      const res = await fetch(`http://localhost:5000/tasks/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+    document.getElementById("loginForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      const res = await fetch("http://localhost:5001/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
       });
 
       if (res.ok) {
-        console.log("Changement effectué ✔️");
-        await fetchTasks();
+        const data = await res.json();
+        localStorage.setItem("token", data.token);
+        document.getElementById("loginStatus").innerText = "Connecté ✅";
+        window.location.href = "kanban.html";
       } else {
-        console.error("Erreur serveur :", res.status);
+        document.getElementById("loginStatus").innerText = "Échec de connexion ❌";
       }
-    } catch (error) {
-      console.error("Erreur réseau :", error);
-    }
-  }
-
-  document.getElementById('taskForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const title = document.getElementById('title').value;
-    const description = document.getElementById('description').value;
-
-    await fetch('http://localhost:5000/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description })
-    });
-
-    document.getElementById('title').value = '';
-    document.getElementById('description').value = '';
-    fetchTasks();
-  });
-
-  fetchTasks();
-</script>
-
+    };
+  </script>
 </body>
 </html>
