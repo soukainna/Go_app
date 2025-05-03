@@ -9,30 +9,47 @@
     form { margin: 20px auto; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
     input, button { padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
     button { background-color: #3498db; color: white; cursor: pointer; }
-    h1 { margin-bottom: 10px; }
-    p { margin: 0; color: green; }
+    .toggle-link { color: #3498db; cursor: pointer; text-decoration: underline; margin-top: 10px; }
+    h1, h2 { margin-bottom: 10px; }
+    p { margin: 0; }
   </style>
 </head>
 <body>
-  <h1>Connexion</h1>
+  <h1>Kanban sécurisé</h1>
 
-  <h2>Inscription</h2>
-  <form id="registerForm">
-    <input type="email" id="regEmail" placeholder="Email" required />
-    <input type="password" id="regPassword" placeholder="Mot de passe" required />
-    <button type="submit">S'inscrire</button>
-  </form>
-  <p id="registerStatus"></p>
+  <div id="loginSection">
+    <h2>Connexion</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Mot de passe" required />
+      <button type="submit">Se connecter</button>
+    </form>
+    <p id="loginStatus"></p>
+    <div class="toggle-link" onclick="showRegister()">Pas encore de compte ? S'inscrire</div>
+  </div>
 
-  <h2>Connexion</h2>
-  <form id="loginForm">
-    <input type="email" id="email" placeholder="Email" required />
-    <input type="password" id="password" placeholder="Mot de passe" required />
-    <button type="submit">Se connecter</button>
-  </form>
-  <p id="loginStatus"></p>
+  <div id="registerSection" style="display: none;">
+    <h2>Inscription</h2>
+    <form id="registerForm">
+      <input type="email" id="regEmail" placeholder="Email" required />
+      <input type="password" id="regPassword" placeholder="Mot de passe" required />
+      <button type="submit">S'inscrire</button>
+    </form>
+    <p id="registerStatus"></p>
+    <div class="toggle-link" onclick="showLogin()">Déjà inscrit ? Se connecter</div>
+  </div>
 
   <script>
+    function showRegister() {
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("registerSection").style.display = "block";
+    }
+
+    function showLogin() {
+      document.getElementById("registerSection").style.display = "none";
+      document.getElementById("loginSection").style.display = "block";
+    }
+
     document.getElementById("registerForm").onsubmit = async (e) => {
       e.preventDefault();
       const email = document.getElementById("regEmail").value;
@@ -63,7 +80,6 @@
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem("token", data.token);
-        document.getElementById("loginStatus").innerText = "Connecté ✅";
         window.location.href = "kanban.html";
       } else {
         document.getElementById("loginStatus").innerText = "Échec de connexion ❌";

@@ -14,7 +14,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var jwtKey = []byte("secret_key") // à sécuriser plus tard
+var jwtKey = []byte("mon-jwt-secret-2025")
+
+// à sécuriser plus tard
 var db *sql.DB
 
 type Credentials struct {
@@ -64,31 +66,28 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var creds Credentials
-	err := json.NewDecoder(r.Body).Decode(&creds)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
 	var storedPassword string
-	err = db.QueryRow("SELECT password FROM users WHERE email = ?", creds.Email).Scan(&storedPassword)
+	var userID int
+	err := db.QueryRow("SELECT id, password FROM users WHERE email = ?", creds.Email).Scan(&userID, &storedPassword)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusUnauthorized)
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(creds.Password))
-	if err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(creds.Password)); err != nil {
 		http.Error(w, "Invalid password", http.StatusUnauthorized)
 		return
 	}
 
 	expirationTime := time.Now().Add(1 * time.Hour)
-	claims := &Claims{
-		Email: creds.Email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-		},
+	claims := jwt.MapClaims{
+		"user_id": userID,
+		"exp":     expirationTime.Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -98,6 +97,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
 }
 
