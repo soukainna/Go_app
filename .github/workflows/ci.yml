@@ -26,14 +26,22 @@ jobs:
     - name: 🚀 Lancer Docker Compose
       run: docker-compose up -d --build
 
-    - name: 🔍 Tester le backend
-      run: curl -sSf http://localhost:5000/health || exit 1
+    - name: ⏳ Attendre que MySQL démarre
+      run: |
+        echo "Attente de 15 secondes..."
+        sleep 15
 
-    - name: 📦 Lancer les tests Go
+    - name: 📦 Lancer les tests Go dans auth
       run: |
         cd auth
+        go mod tidy
         go test ./...
 
+    - name: 📦 Lancer les tests Go dans backend
+      run: |
+        cd backend
+        go mod tidy
+        go test ./...
 
     - name: 🧹 Clean up
       run: docker-compose down
