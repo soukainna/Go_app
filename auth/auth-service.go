@@ -29,7 +29,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func register(w http.ResponseWriter, r *http.Request) {
+func Register(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
 	if r.Method == http.MethodOptions {
 		w.WriteHeader(http.StatusOK)
@@ -58,7 +58,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func login(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
 	if r.Method == http.MethodOptions {
 		w.WriteHeader(http.StatusOK)
@@ -128,8 +128,8 @@ func main() {
 
 	r := mux.NewRouter()
 	r.Use(corsMiddleware)
-	r.HandleFunc("/register", register).Methods("POST", "OPTIONS")
-	r.HandleFunc("/login", login).Methods("POST", "OPTIONS")
+	r.HandleFunc("/register", Register).Methods("POST", "OPTIONS")
+	r.HandleFunc("/login", Login).Methods("POST", "OPTIONS")
 
 	fmt.Println("Auth service running on port 5001")
 	log.Fatal(http.ListenAndServe(":5001", r))

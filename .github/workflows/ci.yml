@@ -29,5 +29,11 @@ jobs:
     - name: 🔍 Tester le backend
       run: curl -sSf http://localhost:5000/health || exit 1
 
+    - name: 📦 Lancer les tests Go
+      run: |
+        cd auth
+        go test ./...
+
+
     - name: 🧹 Clean up
       run: docker-compose down
