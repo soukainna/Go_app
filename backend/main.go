@@ -37,6 +37,11 @@ func main() {
 	r.Handle("/tasks", authMiddleware(http.HandlerFunc(getTasks))).Methods("GET", "OPTIONS")
 	r.Handle("/tasks", authMiddleware(http.HandlerFunc(createTask))).Methods("POST", "OPTIONS")
 	r.Handle("/tasks/{id}", authMiddleware(http.HandlerFunc(updateTask))).Methods("PUT", "OPTIONS")
+	//test github actions
+	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
 
 	log.Println("Serveur backend sur port 5000")
 	http.ListenAndServe(":5000", r)

@@ -27,7 +27,7 @@ jobs:
       run: docker-compose up -d --build
 
     - name: 🔍 Tester le backend
-      run: curl -sSf http://localhost:5000/tasks || exit 1
+      run: curl -sSf http://localhost:5000/health || exit 1
 
     - name: 🧹 Clean up
       run: docker-compose down
